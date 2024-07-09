@@ -102,6 +102,7 @@ def extract_page_text(pdf):
     return text
 
 def find_elements(path):
+  
     pdf_file = pdf.open(path)
     text = extract_page_text(pdf_file)
  
@@ -110,7 +111,7 @@ def find_elements(path):
     inicio = text.find("Placa:")
     text = text[inicio:]
     text = text.split("Placa:")
-    
+ 
 
     text = [x for x in text if x != ""]
 

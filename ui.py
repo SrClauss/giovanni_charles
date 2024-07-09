@@ -48,50 +48,31 @@ def remove_duplicates_diario():
     tq.close()
 
 
-def open_file_and_find_diario(buttons):
+def open_file_and_find_diario():
     file = filedialog.askopenfilename()
-    for button in buttons:
-        button.config(state="disabled")
-    if file != "":
-        try:
-            find_elements(file)
-            remove_duplicates_diario()
-            for button in buttons:
-                button.config(state="normal")    
-        except Exception as e:
-            print(e)
-            for button in buttons:
-                button.config(state="normal")
+    print(file)
+    find_elements(file)
+    remove_duplicates_diario()
+        
 
 
-def open_file_and_find_leilao(buttons):
+def open_file_and_find_leilao():
     file = filedialog.askopenfilename()
-    for button in buttons:
-        button.config(state="disabled")
-    if file != "":
-        try:
-            extract_data(pdfplumber.open(file))
-            remove_duplicates_leilao()
-            for button in buttons:
-                button.config(state="normal")
-
-        except Exception as e:
-            print(e)
-            for button in buttons:
-                button.config(state="normal")
+    print(file)
+    extract_data(pdfplumber.open(file))
+    remove_duplicates_leilao()
+           
 if __name__ == "__main__":
     tk = Tk()
     tk.geometry("400x350")
     frame = Frame(tk, width=300, height=300, padx=20, pady=20)
     frame.pack()
-    button_carregar_diario = Button(frame, text="Carregar Diário Oficial", width=200, pady=15)
+    button_carregar_diario = Button(frame, text="Carregar Diário Oficial", width=200, pady=15, command= lambda: open_file_and_find_diario())
     button_carregar_diario.pack(pady=10, padx=10)
-    button_carregar_relacao = Button(frame, text="Carregar Relação de Veículos Arrematados", width=200, pady=15)
+    button_carregar_relacao = Button(frame, text="Carregar Relação de Veículos Arrematados", width=200, pady=15, command=lambda: open_file_and_find_leilao())
     button_carregar_relacao.pack(pady=10, padx=10)
-    button_cruzar_dados = Button(frame, text="Cruzar Dados", width=250, pady=15)
+    button_cruzar_dados = Button(frame, text="Cruzar Dados", width=250, pady=15, command=lambda: cruza_dados.cruza_dados())
     button_cruzar_dados.pack(pady=10, padx=10)
     buttons = [button_carregar_diario, button_carregar_relacao, button_cruzar_dados]
-    button_carregar_diario.config(command= lambda: open_file_and_find_diario(buttons))
-    button_carregar_diario.config(command= lambda: open_file_and_find_leilao(buttons))
-    button_cruzar_dados.config(command= lambda: cruza_dados.cruza_dados(buttons))
+
     tk.mainloop()
