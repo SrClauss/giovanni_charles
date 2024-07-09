@@ -9,7 +9,9 @@ table_diario_oficial = db.table('diario_oficial')
 
 
 
-def cruza_dados():
+def cruza_dados(buttons):
+    for button in buttons:
+        button.config(state='disabled')
     print('Cruzando dados...')
     diario_oficial = table_diario_oficial.all()
     results = []
@@ -39,6 +41,8 @@ def cruza_dados():
     
 
     print('Dados cruzados com sucesso e salvos em resultados.xlsx')
+    for button in buttons:
+        button.config(state='normal')
 
 
 

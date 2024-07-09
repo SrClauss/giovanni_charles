@@ -5,9 +5,15 @@ db = tinydb.TinyDB('db.json')
 table = db.table('leilao')
 
 def extract_data_relacao_veiculos_arrematados_muriae(pdf_file):
+
+
+
     words = []
+    tq = tqdm(total=len(pdf_file.pages), desc="Processando páginas")
     for page in pdf_file.pages:
         words += page.extract_words()
+        tq.update(1)
+    tq.close()
 
     words_word = [word['text'] for word in words]
     words_word
@@ -27,6 +33,7 @@ def extract_data_relacao_veiculos_arrematados_muriae(pdf_file):
     padrao_moeda = re.compile(r"-?\d{1,3}(?:\.\d{3})*,\d{2}")
 
     results = []
+    tq = tqdm(total=len(tables), desc="Extraindo dados")
     for table in tables:
         result = {}
         for word in range(len(table)):
@@ -38,6 +45,13 @@ def extract_data_relacao_veiculos_arrematados_muriae(pdf_file):
         result['chassi'] = table[4]
         result['modelo'] = " ".join(table[6:index_ano])
         result['ano'] = ano
+        
+        
+        
+        
+        
+        
+        
         dates = []
         valores = []
         for word in range(len(table)):
@@ -75,7 +89,13 @@ def extract_data_relacao_veiculos_arrematados_muriae(pdf_file):
         result['debito_patio'] = valores[7]
         result['saldo'] = f"-{valores[8]}"
         results.append(result)
+        tq.update(1)
 
+
+    tq.close()
+
+
+    print("Dados extraidos com sucesso")
     return results
 
 
@@ -132,7 +152,8 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file):
 
     print("Extraindo dados...")
     results = []
-    for table in tables:
+    for table in tables[:-1]:
+
         result = {}
 
         result['placa'] = table[2]
@@ -140,14 +161,17 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file):
         result['modelo'] = table[5]
         result['ano'] = table[6]
 
+
+        indice_apre = table.index('Apre.:')
+        table = table[indice_apre:]
         dates = []
         valores = []
         for word in table:
             if re.match(padrao_data, word):
                 dates.append(word)
             if re.match(padrao_moeda, word):
-                valores.append(word)
-        
+                valores.append(re.search(padrao_moeda, word).group(0))
+
         if len(dates) == 2:
             result['data_aprensao'] = dates[0]
             result['data_liberacao'] = None
@@ -159,15 +183,17 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file):
             result['data_liberacao'] = dates[1]
             result['data_nf'] = dates[2]
         
+
         result['diarias'] = valores[0]
-        result['reboque'] = valores[1]
-        result['multas'] = valores[2]
-        result['tx_licenciamento'] = valores[5]
-        result['ipva'] = valores[6]
-        result['debito'] = valores[7]
-        result['arremate'] = valores[8]
-        result['debito_patio'] = valores[9]
+        result['multas'] = valores[1]
+        result['reboque'] = valores[4]
+        result['debito'] = valores[5]
+        result['debito_patio'] = valores[6]
+        result['tx_licenciamento'] = valores[7]
+        result['ipva'] = valores[8]
+        result['arremate'] = valores[9]
         result['total'] = valores[10]
+        
         results.append(result)
 
     print("Dados extraidos com sucesso")
@@ -179,24 +205,15 @@ def extract_data(pdf_file):
     words = first_page.extract_words()
     words_word = [word['text'] for word in words]
     if words_word[0] == "DEPARTAMENTO":
-        table.insert_multiple(extract_data_relacao_veiculos_arrematados_cajurense(pdf_file))
+        data = extract_data_relacao_veiculos_arrematados_cajurense(pdf_file)
+        table.insert_multiple(data)
 
     elif words_word[0] == "COORDENADORIA":
-        table.insert_multiple(extract_data_relacao_veiculos_arrematados_muriae(pdf_file))
+        data = extract_data_relacao_veiculos_arrematados_muriae(pdf_file)
+        table.insert_multiple(data)
 
 
-def remove_duplicates():
-    all_data = table.all()
-    #compara todas as entradas com mesmo chassi
 
-    for i in range(len(all_data)):
-        for j in range(i+1, len(all_data)):
-            if all_data[i]['chassi'] == all_data[j]['chassi']:
-                if all_data[i]['total'] > all_data[j]['total']:
-                    table.remove(doc_ids=[j])
-                else:
-                    table.remove(doc_ids=[i])
-        
 
 
 
