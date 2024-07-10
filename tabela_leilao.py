@@ -99,7 +99,7 @@ def extract_data_relacao_veiculos_arrematados_muriae(pdf_file):
     return results
 
 
-def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file):
+def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0, final_page=None):
     #cria uma lista com todas as palavras do pdf        
     words = []
     print("extraindo palavras")
@@ -200,15 +200,19 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file):
     return results
 
     
-def extract_data(pdf_file):
-    first_page = pdf_file.pages[0]
+def extract_data(pdf_file, initial_page=0, final_page=None):
+    
+    first_page = pdf_file.pages[initial_page]
     words = first_page.extract_words()
     words_word = [word['text'] for word in words]
+    print(words_word[0])
     if words_word[0] == "DEPARTAMENTO":
+
         data = extract_data_relacao_veiculos_arrematados_cajurense(pdf_file)
         table.insert_multiple(data)
 
     elif words_word[0] == "COORDENADORIA":
+
         data = extract_data_relacao_veiculos_arrematados_muriae(pdf_file)
         table.insert_multiple(data)
 

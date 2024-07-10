@@ -26,6 +26,7 @@ def remove_duplicates_leilao():
     for item in duplicados:
         leilao.remove(doc_ids=[item.doc_id])
         tq.update(1)
+        
     tq.close()
 
 def remove_duplicates_diario():
@@ -58,9 +59,9 @@ def open_file_and_find_diario():
 
 def open_file_and_find_leilao():
     file = filedialog.askopenfilename()
-    print(file)
     extract_data(pdfplumber.open(file))
     remove_duplicates_leilao()
+    print("Dados extraídos com sucesso")
            
 if __name__ == "__main__":
     tk = Tk()
@@ -74,5 +75,6 @@ if __name__ == "__main__":
     button_cruzar_dados = Button(frame, text="Cruzar Dados", width=250, pady=15, command=lambda: cruza_dados.cruza_dados())
     button_cruzar_dados.pack(pady=10, padx=10)
     buttons = [button_carregar_diario, button_carregar_relacao, button_cruzar_dados]
+ 
 
     tk.mainloop()
