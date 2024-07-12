@@ -8,6 +8,51 @@ import tinydb as db
 db = db.TinyDB("db.json")
 table = db.table("diario_oficial")
 
+def text_between(text:str, word_init:str, word_end:str):
+    position_init = text.find(word_init)
+    if position_init == -1:
+        raise Exception(f"Word {word_init} not found")
+    position_init += len(word_init)
+    position_end = text.find(word_end)
+    if position_end == -1:
+        raise Exception(f"Word {word_end} not found")
+    return text[position_init:position_end].strip()
+
+
+def text_proprietario(text:str):
+    position_init = text.find('Prop.:')
+    increment = 6
+
+    if position_init == -1:
+        position_init = text.find('Prop .:')
+        increment = 7
+    if position_init == -1:
+        position_init = text.find('Prop  .:')
+        increment = 8
+    if position_init == -1:
+        position_init = text.find(' Prop')
+        increment = 5
+
+    position_init += increment
+    position_end = text[position_init:].find('/')
+    if position_end != -1:
+        return text[position_init:position_init+position_end].strip()
+    return text[position_init:].strip()
+def text_ano(text:str):
+    position_init = text.find('Fab .:')
+    increment = 6
+    if position_init == -1:
+        position_init = text.find('Fab.:')
+        increment = 5
+    if position_init == -1:
+        position_init = text.find('Ano Fab')
+        increment = 8
+    if position_init == -1:
+        raise Exception('Ano não encontrado')
+
+    return text[position_init+increment:position_init+increment+4].strip()
+    
+        
 def find_initial_text_area(page):
     first_word = page.extract_words()[0]
     return first_word['x0'], first_word['bottom'] + 2
@@ -111,10 +156,10 @@ def find_elements(path):
     inicio = text.find("Placa:")
     text = text[inicio:]
     text = text.split("Placa:")
+
  
 
     text = [x for x in text if x != ""]
-
 
     tq = tqdm(total=len(text), desc="Extracting elements")
     
@@ -122,75 +167,63 @@ def find_elements(path):
         text[i] = "Placa:" + text[i]
     result = []
     errors = []
+    import json
+    json.dump(text, open("text.json", "w"))
+
     for t in text:
 
         dictionary = {}
+        """
+        placa = [text_between(text, 'Placa: ', 'Chassi: ') for text in data]
+        chassi = [text_between(text, 'Chassi: ', ' Marca') for text in data]
+        modelo = [text_between(text, 'Modelo: ', ' Ano Fab') for text in data]
+        ano = [text_between(text, 'Fab.:', 'Prop.:') for text in data]
+        proprietario = [text_proprietario(text) for text in data]
+        """
+        try:
+            dictionary["placa"] = text_between(t, "Placa:", "Chassi:")
+        except Exception as e:
+            dictionary["placa"] = ""
+            print(f"Error in placa: {e}")
 
         try:
-            placa = re.search(r"Placa:[\w\s/.]+", t).group()
-            dictionary["placa"] = placa.replace("Placa: ", "").replace(" Chassi",  "").replace("Placa:", "").upper()
+            dictionary["chassi"] = text_between(t, "Chassi:", " Marca")
         except Exception as e:
-            
-            #print(t)
-            #print("erro de placa")
+            dictionary["chassi"] = ""
+            print(f"Error in chassi: {e}")
 
-            
-            errors.append({"string": t, "error": e})
-            continue
         try:
-            chassi = re.search(r"Chassi:[\w\s/.]+", t).group()
-            dictionary["chassi"] = chassi.replace("Chassi: ", "").replace(" Marca/Modelo",  "").upper()
+            dictionary["modelo"] = text_between(t, "Modelo:", " Ano Fab")
         except Exception as e:
+            try:
+                dictionary["modelo"] = text_between(t, "Modelo:", " Ano")
+            except Exception as e:
+                dictionary["modelo"] = ""
+                print(f"Error in modelo: {e}")
+        try:
+            dictionary["ano"] = text_ano(t)
 
-            #print(t)
-            #print("erro de chassi")
-            errors.append({"string": t, "error": e})
-            continue
+        except Exception as e:
+            dictionary["ano"] = ""
+            print(f"Error in ano: {e}")
+
         
-        try:             
-            marca_modelo = re.search(r"Marca/Modelo:([\w\s/.-]+)", t, re.IGNORECASE).group(1)
-            dictionary["marca_modelo"] = marca_modelo.strip().upper()
-        except:
-            try:
-                marca_modelo = re.search(r"Marca/ Modelo:([\w\s/.-]+)", t, re.IGNORECASE).group(1)
-                dictionary["marca_modelo"] = marca_modelo.strip().upper()
-            except Exception as e:                
-                #print(t)
-                #print("erro de marca_modelo")
-                errors.append({"string": t, "error": e})
-                continue
-        try: 
-            ano_fabricacao = re.search(r"Ano Fab.:[\w\s/]+", t).group()
-            dictionary["ano_fabricacao"] = ano_fabricacao.replace("Ano Fab.:", "").replace(" Prop", "").upper()
-
-        except:
-            try:
-                ano_fabricacao = re.search(r"Ano Fab .:[\w\s/]+", t).group()
-                dictionary["ano_fabricacao"] = ano_fabricacao.replace("Ano Fab .:", "").replace(" Prop", "").upper()
-            except Exception as e:
-                #print(t)
-                #print("erro de ano_fabricacao")
-                errors.append({"string": t, "error": e})
-                continue
         try:
-            proprietario = re.search(r"Prop.:[\w\s]+", t).group()
-            dictionary["proprietario"] = proprietario.replace("Prop.: ", "")
-        except:
-            try:
-                proprietario = re.search(r"Prop .:[\w\s]+", t).group().replace("Prop.: ", "")
-            except Exception as e:
-                #print(t)
-                #print("erro de proprietario")
-                errors.append({"string": t, "error": e})
-                continue
+            dictionary["proprietario"] = text_proprietario(t)
+        except Exception as e:
+            dictionary["proprietario"] = ""
+            print(f"Error in proprietario: {e}")
 
-        tq.update(1)
         result.append(dictionary)
+
+
+        
+      
+
             
     print("Elements extracted")
     for error in errors:
         print(error)
-
 
     table.insert_multiple(result)
 

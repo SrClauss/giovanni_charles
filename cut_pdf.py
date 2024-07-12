@@ -30,8 +30,9 @@ def cut_pdf(file_path, initial_page, final_page):
 if __name__ == "__main__":
 	root = Tk()
 	root.title("Cut PDF")
-	root.geometry("300x300")
-
+	root.geometry("600x300")
+	PADX = 10
+	PADY = 10
 	frame = Frame(root)
 	frame.pack(pady=20)
 
@@ -40,25 +41,25 @@ if __name__ == "__main__":
 	final = StringVar()
 
 	Label(frame, text="Caminho do arquivo:").grid(row=0, column=0)
-	file_path_entry = Entry(frame, width=30, state='readonly', textvariable=path)
+	file_path_entry = Entry(frame, width=50, state='readonly', textvariable=path)
 	file_path_entry.grid(row=0, column=1)
 
 
 	Label(frame, text="Página inicial:").grid(row=1, column=0)
-	initial_page_entry = Entry(frame, width=30, textvariable=initial)
-	initial_page_entry.grid(row=1, column=1)
+	initial_page_entry = Entry(frame, width=50, textvariable=initial)
+	initial_page_entry.grid(row=1, column=1, pady=PADY, padx=PADX)
 
 	Label(frame, text="Página final:").grid(row=2, column=0)
-	final_page_entry = Entry(frame, width=30, textvariable=final)
-	final_page_entry.grid(row=2, column=1)
+	final_page_entry = Entry(frame, width=50, textvariable=final)
+	final_page_entry.grid(row=2, column=1, pady=PADY, padx=PADX)
 
-	button_selecionar_arquivo = Button(frame, text="Selecionar arquivo", command=lambda: path.set(filedialog.askopenfilename()))
-	button_selecionar_arquivo.grid(row=3, column=0, columnspan=2)
+	button_selecionar_arquivo = Button(frame, text="Selecionar arquivo", command=lambda: path.set(filedialog.askopenfilename()), width=70, height=2)
+	button_selecionar_arquivo.grid(row=3, column=0, columnspan=2, pady=PADY, padx=PADX)
 
 
 
-	button_cut_pdf = Button(frame, text="Cortar PDF", command=lambda: cut_pdf(path.get(), initial.get(), final.get()))
-	button_cut_pdf.grid(row=4, column=0, columnspan=2)
+	button_cut_pdf = Button(frame, text="Cortar PDF", command=lambda: cut_pdf(path.get(), initial.get(), final.get()), width=70, height=2)
+	button_cut_pdf.grid(row=4, column=0, columnspan=2, pady=PADY, padx=PADX)
 
 
 
