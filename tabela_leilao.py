@@ -4,6 +4,13 @@ from tqdm import tqdm
 db = tinydb.TinyDB('db.json')
 table = db.table('leilao')
 
+
+"""
+TODO: Fazer a insersão de dados do renavan que é o segundo campo da tabela de veiculos arrematados
+TODO: Inserir um mecanismo de arquivamentos dos jsons
+
+"""
+
 def extract_data_relacao_veiculos_arrematados_muriae(pdf_file):
 
 
@@ -22,7 +29,7 @@ def extract_data_relacao_veiculos_arrematados_muriae(pdf_file):
 
     indices_lotes = [i for i, x in enumerate(words_word) if x == 'Lote:']
 
-
+   
 
     tables = []
     for i in range(len(indices_lotes) -1):
