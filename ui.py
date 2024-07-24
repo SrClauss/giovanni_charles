@@ -79,6 +79,7 @@ def open_file_dialog():
     else:
         return None
 def open_file_and_find_leilao():
+    
     file = filedialog.askopenfilename()
     extract_data(pdfplumber.open(file))
     remove_duplicates_leilao()
@@ -97,6 +98,7 @@ class ListDialog(simpledialog.Dialog):
         for item in os.listdir("arquivados"):
             self.listbox.insert(tkinter.END, item)
         return self.listbox
+    
     def apply(self) -> None:
         self.result = self.listbox.get(self.listbox.curselection())
 

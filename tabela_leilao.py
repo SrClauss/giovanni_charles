@@ -13,7 +13,7 @@ TODO: Inserir um mecanismo de arquivamentos dos jsons
 
 def extract_data_relacao_veiculos_arrematados_muriae(pdf_file):
 
-
+    
 
     words = []
     tq = tqdm(total=len(pdf_file.pages), desc="Processando páginas")
@@ -107,7 +107,8 @@ def extract_data_relacao_veiculos_arrematados_muriae(pdf_file):
 
 
 def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0, final_page=None):
-    #cria uma lista com todas as palavras do pdf        
+    #cria uma lista com todas as palavras do pdf
+
     words = []
     print("extraindo palavras")
     print(f"numero de paginas: {len(pdf_file.pages)}")
@@ -208,19 +209,26 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0
 
     
 def extract_data(pdf_file, initial_page=0, final_page=None):
-    
+
     first_page = pdf_file.pages[initial_page]
     words = first_page.extract_words()
+    print(first_page.extract_text())
     words_word = [word['text'] for word in words]
-    print(words_word[0])
+  
     if words_word[0] == "DEPARTAMENTO":
-
+   
         data = extract_data_relacao_veiculos_arrematados_cajurense(pdf_file)
         table.insert_multiple(data)
 
     elif words_word[0] == "COORDENADORIA":
 
+
         data = extract_data_relacao_veiculos_arrematados_muriae(pdf_file)
+        table.insert_multiple(data)
+    
+
+    else:
+        data = extract_data_relacao_veiculos_arrematados_cajurense(pdf_file)
         table.insert_multiple(data)
 
 
