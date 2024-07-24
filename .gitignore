@@ -1,3 +1,5 @@
 venv/
 lixo/
 *.ipynb
+db.json
+arquivados/
