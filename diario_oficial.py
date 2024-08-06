@@ -16,7 +16,7 @@ def text_between(text:str, word_init:str, word_end:str):
     position_end = text.find(word_end)
     if position_end == -1:
         raise Exception(f"Word {word_end} not found")
-    return text[position_init:position_end].strip()
+    return text[position_init:position_end].strip().upper()
 
 
 def text_proprietario(text:str):

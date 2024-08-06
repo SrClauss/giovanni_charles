@@ -165,7 +165,7 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0
         result = {}
 
         result['placa'] = table[2]
-        result['chassi'] = table[3]
+        result['chassi'] = table[3].upper()
         result['modelo'] = table[5]
         result['ano'] = table[6]
 
