@@ -115,7 +115,7 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0
 
 
     for page in tqdm(pdf_file.pages, desc="Processando páginas"):
-        words += page.extract_words()
+        words += page.extract_words(x_tolerance=2)
         
     print(f"palavras extraidas: {len(words)}")
 
@@ -160,6 +160,7 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0
 
     print("Extraindo dados...")
     results = []
+
     for table in tables[:-1]:
 
         result = {}
@@ -170,10 +171,17 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0
         result['ano'] = table[6]
 
 
-        indice_apre = table.index('Apre.:')
+        try:
+            indice_apre = table.index('Apre.:')
+        except:
+            indice_apre = table.index('DataApre.:')
+
+        
         table = table[indice_apre:]
         dates = []
         valores = []
+
+        print(table)
         for word in table:
             if re.match(padrao_data, word):
                 dates.append(word)
@@ -212,7 +220,6 @@ def extract_data(pdf_file, initial_page=0, final_page=None):
 
     first_page = pdf_file.pages[initial_page]
     words = first_page.extract_words()
-    print(first_page.extract_text())
     words_word = [word['text'] for word in words]
   
     if words_word[0] == "DEPARTAMENTO":

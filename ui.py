@@ -54,7 +54,6 @@ def remove_duplicates_diario():
 
 def open_file_and_find_diario():
     file = filedialog.askopenfilename()
-    print(file)
     find_elements(file)
     remove_duplicates_diario()
         
