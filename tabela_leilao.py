@@ -170,18 +170,13 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0
         result['modelo'] = table[5]
         result['ano'] = table[6]
 
-
-        try:
-            indice_apre = table.index('Apre.:')
-        except:
-            indice_apre = table.index('DataApre.:')
-
+        indice_apre = table.index('Apre.:')
         
         table = table[indice_apre:]
         dates = []
         valores = []
 
-        print(table)
+
         for word in table:
             if re.match(padrao_data, word):
                 dates.append(word)
