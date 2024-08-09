@@ -11,7 +11,7 @@ def cruza_dados():
         words = ["Banco ", "Bco. ","Bco.", "Bv", "Bco "]
         for word in words:
             if word in nome:
-                nome = (nome.split(word)[0] + " | " + nome.split(word)[1]).replace("- ", "").replace(" -", "").replace(" - ", "").replace("-","")
+                nome = (nome.split(word)[0] + " | " + word + " " + nome.split(word)[1]).replace("- ", "").replace(" -", "").replace(" - ", "").replace("-","")
         return nome
 
     lista_diario_oficial = diario_oficial.all()
