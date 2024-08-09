@@ -3,3 +3,4 @@ lixo/
 *.ipynb
 db.json
 arquivados/
+__pycache__/
