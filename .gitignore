@@ -4,3 +4,4 @@ lixo/
 db.json
 arquivados/
 __pycache__/
+*.xlsx
