@@ -1,7 +1,7 @@
 from tkinter import Tk, Button, Frame, filedialog, simpledialog, Listbox
 import tkinter
 from diario_oficial import find_elements
-from tabela_leilao import extract_data
+from tabela_leilao import extract_data, extract_data_new_model
 import pdfplumber
 import cruza_dados
 from tinydb import TinyDB
@@ -84,6 +84,11 @@ def open_file_and_find_leilao():
     remove_duplicates_leilao()
     print("Dados extraídos com sucesso")
 
+def open_file_and_find_leilao_new_model():
+    file = filedialog.askopenfilename()
+    extract_data_new_model(pdfplumber.open(file))
+    remove_duplicates_leilao()
+    print("Dados extraídos com sucesso")
 
 class ListDialog(simpledialog.Dialog):
     def __init__(self, master, **kwargs):
@@ -130,6 +135,8 @@ if __name__ == "__main__":
     button_carregar_diario.pack(pady=10, padx=10)
     button_carregar_relacao = Button(frame, text="Carregar Relação de Veículos Arrematados", width=200, pady=15, command=lambda: open_file_and_find_leilao())
     button_carregar_relacao.pack(pady=10, padx=10)
+    button_carregar_relacao_new_model = Button(frame, text="Carregar Relação de Veículos Arrematados (Novo Modelo)", width=200, pady=15, command=lambda: open_file_and_find_leilao_new_model())
+    button_carregar_relacao_new_model.pack(pady=10, padx=10)
     button_cruzar_dados = Button(frame, text="Cruzar Dados", width=250, pady=15, command=lambda: cruza_dados.cruza_dados())
     button_cruzar_dados.pack(pady=10, padx=10)
     button_arquivar = Button(frame, text="Arquivar JSONs", width=250, pady=15, command=lambda: open_file_dialog())

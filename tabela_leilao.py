@@ -210,7 +210,46 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0
     print("Dados extraidos com sucesso")
     return results
 
-    
+
+def extract_data_new_model(pdf_file):
+    results = []
+    def extract_table_new_model(table): 
+        result = {}
+
+        line1 = table[1]
+        line2 = table[2]
+        line9 = table[9]
+        result['modelo'] = line1[0].replace("Marca/Modelo: ", "")
+        result['placa'] = line1[1].replace("Placa: ", "")
+        result['chassi'] = line1[2].replace("Chassi: ", "")
+        result['ano'] = line2[1].replace("Ano Fabricação: ", "")
+        result['arremate'] = line9[0].replace("Condição: ", "")
+        result['data_aprensao'] = ""
+        result['data_liberacao'] = ""
+        result['data_nf'] = ""
+        result['diarias'] = ""
+        result['reboque'] = ""
+        result['debito_patio'] = ""
+        result['multas'] = ""
+        result['tx_licenciamento'] = ""
+        result['ipva'] = ""
+        result['debito'] = ""
+        result['total'] = ""
+        return result
+
+    def extract_page(page):
+
+        tables = page.extract_tables()
+        for table in tables:
+            yield extract_table_new_model(table)
+
+    for page in pdf_file.pages:
+        results += extract_page(page)
+
+    print("Dados extraidos com sucesso")
+    table.insert_multiple(results)
+
+
 def extract_data(pdf_file, initial_page=0, final_page=None):
 
     first_page = pdf_file.pages[initial_page]
