@@ -213,32 +213,32 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0
 
 def extract_data_new_model(pdf_file):
     results = []
+    
     def extract_table_new_model(table): 
+     
         result = {}
-
-        line1 = table[1]
-        line2 = table[2]
-        line9 = table[9]
-        result['modelo'] = line1[0].replace("Marca/Modelo: ", "")
-        result['placa'] = line1[1].replace("Placa: ", "")
-        result['chassi'] = line1[2].replace("Chassi: ", "")
-        result['ano'] = line2[1].replace("Ano Fabricação: ", "")
-        result['arremate'] = line9[0].replace("Condição: ", "")
-        result['data_aprensao'] = ""
+        line1 = table[0]
+        line2 = table[1]
+        line3 = table[2]
+        result['modelo'] = line1[5]
+        result['placa'] = line1[2]
+        result['chassi'] = line1[3]
+        result['ano'] = line2[6]
+        result['arremate'] = line3[3].replace("Arremate:","")
+        result['data_aprensao'] = line2[0].replace("Data Apre.:","")
         result['data_liberacao'] = ""
-        result['data_nf'] = ""
-        result['diarias'] = ""
-        result['reboque'] = ""
-        result['debito_patio'] = ""
-        result['multas'] = ""
-        result['tx_licenciamento'] = ""
-        result['ipva'] = ""
-        result['debito'] = ""
-        result['total'] = ""
+        result['data_nf'] = line1[1].replace("Data NF:","")
+        result['diarias'] = line2[2].replace("Dias Apre.: ","")
+        result['reboque'] = float(line2[4].replace("Vl. Reboque: ","").replace("R$","").replace(".","").replace(",","."))
+        result['debito_patio'] = float(line2[3].replace("Vl. Diárias: ","").replace("R$","").replace(".","").replace(",","."))
+        result['multas'] = float(line2[5].replace("Total Multas: ","").replace("R$","").replace(".","").replace(",","."))
+        result['tx_licenciamento'] = float(line3[0].replace("Tx. Lic.: ","").replace("R$","").replace(".","").replace(",","."))
+        result['ipva'] = float(line3[1].replace("IPVA: ","").replace("R$","").replace(".","").replace(",","."))
+        result['debito'] = float(line3[2].replace("Débito: ","").replace("R$","").replace(".","").replace(",","."))
+        result['total'] = float(line3[5].replace("Saldo: ","").replace("R$","").replace(".","").replace(",","."))
         return result
 
     def extract_page(page):
-
         tables = page.extract_tables()
         for table in tables:
             yield extract_table_new_model(table)

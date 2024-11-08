@@ -5,3 +5,4 @@ db.json
 arquivados/
 __pycache__/
 *.xlsx
+*.pdf

@@ -50,7 +50,7 @@ def text_ano(text:str):
     if position_init == -1:
         raise Exception('Ano não encontrado')
 
-    return text[position_init+increment:position_init+increment+4].strip()
+    return text[position_init+increment:position_init+increment+5].strip()
     
         
 def find_initial_text_area(page):
