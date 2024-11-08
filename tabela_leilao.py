@@ -215,7 +215,9 @@ def extract_data_new_model(pdf_file):
     results = []
     
     def extract_table_new_model(table): 
-     
+        if not table[0][0].startswith("Lote"):
+            raise Exception("Tabela não corresponde ao modelo esperado")
+            
         result = {}
         line1 = table[0]
         line2 = table[1]
@@ -223,7 +225,7 @@ def extract_data_new_model(pdf_file):
         result['modelo'] = line1[5]
         result['placa'] = line1[2]
         result['chassi'] = line1[3]
-        result['ano'] = line2[6]
+        result['ano'] = line1[6]
         result['arremate'] = line3[3].replace("Arremate:","")
         result['data_aprensao'] = line2[0].replace("Data Apre.:","")
         result['data_liberacao'] = ""

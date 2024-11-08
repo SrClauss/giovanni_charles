@@ -173,13 +173,7 @@ def find_elements(path):
     for t in text:
 
         dictionary = {}
-        """
-        placa = [text_between(text, 'Placa: ', 'Chassi: ') for text in data]
-        chassi = [text_between(text, 'Chassi: ', ' Marca') for text in data]
-        modelo = [text_between(text, 'Modelo: ', ' Ano Fab') for text in data]
-        ano = [text_between(text, 'Fab.:', 'Prop.:') for text in data]
-        proprietario = [text_proprietario(text) for text in data]
-        """
+   
         try:
             dictionary["placa"] = text_between(t, "Placa:", "Chassi:")
         except Exception as e:
