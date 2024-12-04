@@ -1,224 +1,107 @@
-import pdfplumber as pdf
 import re
 from tqdm import tqdm
-import tkinter as tk
-from tkinter import filedialog
 import tinydb as db
-
-db = db.TinyDB("db.json")
-table = db.table("diario_oficial")
-
-def text_between(text:str, word_init:str, word_end:str):
-    position_init = text.find(word_init)
-    if position_init == -1:
-        raise Exception(f"Word {word_init} not found")
-    position_init += len(word_init)
-    position_end = text.find(word_end)
-    if position_end == -1:
-        raise Exception(f"Word {word_end} not found")
-    return text[position_init:position_end].strip().upper()
+import fitz
+import requests
+from tqdm import tqdm
+from colorama import Fore
+import os
+from datetime import date, timedelta
 
 
-def text_proprietario(text:str):
-    position_init = text.find('Prop.:')
-    increment = 6
 
-    if position_init == -1:
-        position_init = text.find('Prop .:')
-        increment = 7
-    if position_init == -1:
-        position_init = text.find('Prop  .:')
-        increment = 8
-    if position_init == -1:
-        position_init = text.find(' Prop')
-        increment = 5
+table = db.TinyDB("db.json").table("diario_oficial")
 
-    position_init += increment
-    position_end = text[position_init:].find('/')
-    if position_end != -1:
-        return text[position_init:position_init+position_end].strip()
-    return text[position_init:].strip()
-def text_ano(text:str):
-    position_init = text.find('Fab .:')
-    increment = 6
-    if position_init == -1:
-        position_init = text.find('Fab.:')
-        increment = 5
-    if position_init == -1:
-        position_init = text.find('Ano Fab')
-        increment = 8
-    if position_init == -1:
-        raise Exception('Ano não encontrado')
 
-    return text[position_init+increment:position_init+increment+5].strip()
+def baixar_diario(ano, mes, dia):
+    caderno = 1
     
+    while True:
+        nome_arquivo = f"caderno{caderno}_{ano}-{str(mes).zfill(2)}-{str(dia).zfill(2)}.pdf"
+        url = f"https://www.jornalminasgerais.mg.gov.br/modulos/www.jornalminasgerais.mg.gov.br//diarioOficial/{ano}/{str(mes).zfill(2)}/{str(dia).zfill(2)}/jornal/{nome_arquivo}"
+        print(url)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+        }
+        response = requests.get(url, headers=headers, stream=True)
         
-def find_initial_text_area(page):
-    first_word = page.extract_words()[0]
-    return first_word['x0'], first_word['bottom'] + 2
-
-def find_next_void_y_area(page):
-    x, y = find_initial_text_area(page)
-    page_width = page.width
-    
-    while page.crop((x, y, page_width, y + 4)).extract_text() != "":
-        y += 40
-    return y
-
-def find_text_area(page):
-    x, y = find_initial_text_area(page)
-    height = find_next_void_y_area(page)
-    page_width = page.width
-    corte_final = 10
-
-    while page.crop((page_width - corte_final , y, page_width, height)).extract_text() == "":
-        corte_final += 10
-    return page.crop((x, y, page_width - corte_final + 10, height))
-
-def agrupar_e_media(numeros):
-    agrupados = []
-    grupo_temp = []
-
-    for numero in numeros:
-        if not grupo_temp:
-            grupo_temp.append(numero)
-        elif numero - grupo_temp[-1] < 4:
-            grupo_temp.append(numero)
+        if response.status_code == 200:
+            total_size = int(response.headers.get('content-length', 0))
+            block_size = 1024  # 1 Kibibyte
+            t = tqdm(total=total_size, unit='iB', unit_scale=True, 
+                    bar_format=f"Baixando arquivo {nome_arquivo} {Fore.GREEN}{{l_bar}}{{bar}}{{r_bar}}{Fore.RESET}")
+            
+            with open(f"pdf/{nome_arquivo}", "wb") as file:
+                for data in response.iter_content(block_size):
+                    t.update(len(data))
+                    file.write(data)
+            t.close()
+        
+            
+            if total_size != 0 and t.n != total_size:
+                print("Erro ao baixar o PDF")
+                os.remove(f"pdf/{nome_arquivo}")
+                break
+            else:
+                print("PDF baixado com sucesso")
+                find_elements(f"pdf/{nome_arquivo}")
+                caderno += 1
         else:
-            if len(grupo_temp) > 1:
-                agrupados.append(sum(grupo_temp) / len(grupo_temp))
-            elif len(grupo_temp) == 1:
-                agrupados.append(grupo_temp[0])
-            grupo_temp = [numero]
+            print("Erro ao baixar o PDF")
+            print(response.status_code)
+            print(response.text)
+            break
 
-    if len(grupo_temp) > 1:
-        agrupados.append(sum(grupo_temp) / len(grupo_temp))
-    elif len(grupo_temp) == 1:
-        agrupados.append(grupo_temp[0])
-
-    return agrupados
-
-def define_void_areas(page_crop):
-    initial_x, initial_y, final_x, final_y = page_crop.bbox
-    void_areas = [initial_x]
-    tq = tqdm(total=final_x - initial_x, desc="Defining void areas")
-    while initial_x < final_x - 3:
-        if page_crop.crop((initial_x, initial_y, initial_x + 3, final_y)).extract_text() == "":
-            void_areas.append(initial_x)
-
-        
-        initial_x += 3
-        tq.update(3)
-    void_areas.append(final_x)
-
-    void_areas = agrupar_e_media(void_areas)
-    return void_areas
- 
-def extract_text(page_crop, page):
-
-    void_areas = define_void_areas(page_crop)
+def baixar_intervalo(data_inicio, data_fim):    
+    while data_inicio <= data_fim:
+        baixar_diario(data_inicio.year, data_inicio.month, data_inicio.day)
+        data_inicio += timedelta(days=1)
     
+    print("Fim do download")
+        
+        
+def extract_page_text(pdf_file):
+    document = fitz.open(pdf_file)
+    full_text = ""
 
-    _, initial_y, _, final_y = page_crop.bbox
+    for page_num in tqdm(range(len(document)), desc=f"Extracting text from {pdf_file}"):
+        page = document.load_page(page_num)
+        rect = page.rect
+        clip = fitz.Rect(rect.x0, rect.y0 + 90, rect.x1, rect.y1 - 50)
+        full_text += page.get_text("text", clip=clip)
+        
+    
+    return full_text
 
-    table = page_crop.extract_table({
-        "vertical_strategy": "explicit",
-        "horizontal_strategy": "explicit",
-        "explicit_vertical_lines": void_areas,
-        "explicit_horizontal_lines": [initial_y, final_y]
-    })
 
-    text = ""
-    for row in table[0]:
-        for cell in row:
-            text += cell
-        text += "\n"
-    return text
 
-def extract_page_text(pdf):
-
-    pages = pdf.pages
-    text = ""
-    tqdm_pages = tqdm(pages, desc="Extracting text", total=len(pages))
-    for i in range(len(pages)):
-        page_crop = find_text_area(pages[i])
-        text += extract_text(page_crop, i)
-        tqdm_pages.update(1)
-    return text
 
 def find_elements(path):
-  
-    pdf_file = pdf.open(path)
-    text = extract_page_text(pdf_file)
- 
-
-    text = text.replace("\n", " ")
-    inicio = text.find("Placa:")
-    text = text[inicio:]
-    text = text.split("Placa:")
-
- 
-
-    text = [x for x in text if x != ""]
-
-    tq = tqdm(total=len(text), desc="Extracting elements")
-    
-    for i in range(len(text)):
-        text[i] = "Placa:" + text[i]
-    result = []
-    errors = []
-    import json
-    json.dump(text, open("text.json", "w"))
-
-    for t in text:
-
-        dictionary = {}
+    text = extract_page_text(path).replace("\n", " ").replace("Marca/ Modelo: ", "Marca/Modelo: ").replace("  ", " ")
+    group = text.split("veículos se encontram recolhidos no(s) depósito(s) abaixo relacionado(s), na cidade de")[1:]
    
-        try:
-            dictionary["placa"] = text_between(t, "Placa:", "Chassi:")
-        except Exception as e:
-            dictionary["placa"] = ""
-            print(f"Error in placa: {e}")
+    group_tuples  = []
 
-        try:
-            dictionary["chassi"] = text_between(t, "Chassi:", " Marca")
-        except Exception as e:
-            dictionary["chassi"] = ""
-            print(f"Error in chassi: {e}")
-
-        try:
-            dictionary["modelo"] = text_between(t, "Modelo:", " Ano Fab")
-        except Exception as e:
-            try:
-                dictionary["modelo"] = text_between(t, "Modelo:", " Ano")
-            except Exception as e:
-                dictionary["modelo"] = ""
-                print(f"Error in modelo: {e}")
-        try:
-            dictionary["ano"] = text_ano(t)
-
-        except Exception as e:
-            dictionary["ano"] = ""
-            print(f"Error in ano: {e}")
-
+    for g in group:
+        cidade = g.split(" Placa: ")[0]
+        texto = g.replace(cidade, "")
+        group_tuples.append((cidade,texto))
         
-        try:
-            dictionary["proprietario"] = text_proprietario(t)
-        except Exception as e:
-            dictionary["proprietario"] = ""
-            print(f"Error in proprietario: {e}")
-
-        result.append(dictionary)
 
 
-        
-      
-
-            
-    print("Elements extracted")
-    for error in errors:
-        print(error)
-
-    table.insert_multiple(result)
-
-
+    padrao = r"Placa:\s*(?P<placa>\w+)\s*Chassi:\s*(?P<chassi>\w+)\s*Marca/Modelo:\s*(?P<marca_modelo>[\w\s/]+)\s*Ano Fab\.\:\s*(?P<ano_fab>\d{4})\s*Prop\.\:\s*(?P<proprietario>[\w\s\.\:]+)\s*/"
+    
+    
+    
+    veiculos_cidade = []
+    for group_tuple in tqdm(group_tuples, desc="Processing groups"):
+        cidade, texto = group_tuple
+     
+        for match in re.finditer(padrao, texto):
+            veiculo = match.groupdict()
+            veiculo["cidade"] = cidade.split(".")[0]
+            veiculo["patio"] = cidade.split(".")[1]
+            veiculo["publicacao"] = path
+            veiculos_cidade.append(veiculo)
+    print(f"Encontrados {len(veiculos_cidade)} veículos em {path}")
+    table.insert_multiple(veiculos_cidade)

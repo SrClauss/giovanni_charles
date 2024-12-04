@@ -2,6 +2,7 @@ venv/
 lixo/
 *.ipynb
 db.json
+db_dados_cruzados.json
 arquivados/
 __pycache__/
 *.xlsx

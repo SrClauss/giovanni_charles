@@ -2,6 +2,28 @@ import tinydb
 import openpyxl
 import tkinter
 from tkinter import filedialog
+
+db_dados_cruzados = tinydb.TinyDB("db_dados_cruzados.json")
+
+
+
+def normatiza_nomes(nome):
+    conectores_sempre_minusculos = [
+        "de", "da", "do", "dos", "di", "das", "d'", "e", "y", "van", "von", "de la", "del",
+        "a", "para", "por", "em", "al", "à", "às", "of", "in", "iz", "ov", "al", "bin", "ibn", "abu", "um", "bint",
+        "el", "la", "los", "las", "lo", "le", "l'", "les", "un", "una", "unos", "unas", "the", "a", "an", "ou", "and", "or", "i", "ili"
+    ]
+    nome = nome.lower()
+    nome = nome.split(" ")
+    for i in range(len(nome)):
+        if nome[i] not in conectores_sempre_minusculos:
+            nome[i] = nome[i].capitalize()
+    nome = " ".join(nome)
+    return nome
+    
+
+def gera_peticoes():
+    pass
 def cruza_dados():
     db = tinydb.TinyDB('db.json')
     diario_oficial = db.table('diario_oficial')
@@ -25,7 +47,7 @@ def cruza_dados():
             if automovel['chassi'].upper() == proprietario['chassi'].upper() or automovel['placa'].replace(
                     "-", "").upper() == proprietario['placa'].replace("-", "").upper():
                 cruzamento.append({
-                    "proprietario": processa_nomes(proprietario['proprietario']),
+                    "proprietario": normatiza_nomes(processa_nomes(proprietario['proprietario'])),
                     "placa": automovel['placa'],
                     "modelo": automovel['modelo'],
                     "ano": automovel['ano'],
@@ -39,24 +61,24 @@ def cruza_dados():
                     "multas": automovel['multas'],
                     "tx_licenciamento": automovel['tx_licenciamento'],
                     "ipva": automovel['ipva'],
-                    "debito": automovel['debito'],
+                    "debito": automovel['debitos'],
                     "arremate": automovel['arremate'],
-                    "total": automovel['total']
+                    "total": automovel['saldo'],
+                    
+                    
                 })
 
 
 
 
-    amostra1 = diario_oficial.all()[211]
-    amostra2 = leilao.all()[0]
+
+    db_dados_cruzados.insert_multiple(cruzamento)
+    gera_peticoes()
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.append(['Proprietario', 'Placa', 'Modelo', 'Ano', 'Chassi', 'Data Apreensao', 'Data Liberacao', 'Data NF', 'Diarias', 'Reboque', 'Debito Patio', 'Multas', 'Taxa Licenciamento', 'IPVA', 'Debito', 'Arremate', 'Total'])
-
-
     for r in cruzamento:
         ws.append([r['proprietario'], r['placa'], r['modelo'], r['ano'], r['chassi'], r['data_aprensao'], r['data_liberacao'], r['data_nf'], r['diarias'], r['reboque'], r['debito_patio'], r['multas'], r['tx_licenciamento'], r['ipva'], r['debito'], r['arremate'], r['total']])
     file = filedialog.asksaveasfilename(defaultextension='.xlsx')
     wb.save(file)
     print('Dados cruzados com sucesso')
-

@@ -1,6 +1,7 @@
 from tkinter import Tk, Button, Frame, filedialog, simpledialog, Listbox
+from tkcalendar import DateEntry
 import tkinter
-from diario_oficial import find_elements
+from  diario_oficial import find_elements, baixar_intervalo
 from tabela_leilao import extract_data, extract_data_new_model
 import pdfplumber
 import cruza_dados
@@ -9,6 +10,10 @@ from tqdm import tqdm
 from datetime import datetime
 import os
 import shutil
+
+
+
+db_dados_cruzados = TinyDB('db_dados_cruzados.json')
 db = TinyDB('db.json')
 leilao = db.table('leilao')
 diario_oficial = db.table('diario_oficial')
@@ -54,20 +59,28 @@ def remove_duplicates_diario():
 
 def open_file_and_find_diario():
     file = filedialog.askopenfilename()
+    if not file:
+        return None
     find_elements(file)
     remove_duplicates_diario()
         
 def rename_and_move_jsons(details: str):
     date = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"arquivados/{date}_{details}.json"
+    filename_db = f"arquivados/db_{date}_{details}.json"
+    filename_dados_cruzados = f"arquivados/dados_cruzados_{date}_{details}.json"
 
     #faça uma copia de db.json para arquivdos com o nome filename
-    shutil.copy("db.json", filename)
+    shutil.copy("db.json", filename_db)
+    shutil.copy("db_dados_cruzados.json", filename_dados_cruzados)
     #apague o conteudo de db.json
     db.drop_tables()
+    db_dados_cruzados.drop_tables()
+    
 
     print("JSONs arquivados com sucesso")
 
+import tkinter as tk
+from tkinter import Toplevel, Frame, Button, Label
 
 
 
@@ -105,15 +118,37 @@ class ListDialog(simpledialog.Dialog):
     
     def apply(self) -> None:
         self.result = self.listbox.get(self.listbox.curselection())
+class DateRangeDialog(simpledialog.Dialog):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+       
 
+    def body(self, master):
+
+        self.title("Escolha o arquivo a ser desarquivado")
+        self.calendar_inicio = DateEntry(master=master, width=12, background='darkblue', foreground='white', borderwidth=2)
+        self.calendar_inicio.grid(row=0, column=0, padx=10, pady=10)
+        self.calendar_fim = DateEntry(master=master, width=12, background='darkblue', foreground='white', borderwidth=2)
+        self.calendar_fim.grid(row=0, column=1, padx=10, pady=10)
+   
+    def apply(self) -> None:
+        self.result = (self.calendar_inicio.get_date(), self.calendar_fim.get_date())
+def show_date_range_dialog():
+    dialog = DateRangeDialog(None)
+
+    baixar_intervalo(dialog.result[0], dialog.result[1])
+    
 def show_list_dialog():
     dialog = ListDialog(None)
     desarquivar_jsons(dialog.result)
 
 def desarquivar_jsons(filename):
     global db
+    global db_dados_cruzados
     db.close()
+    db_dados_cruzados.close()
     shutil.copy(f"arquivados/{filename}", "db.json")
+    shutil.copy(f"arquivados/dados_cruzados_{filename.split('_')[1]}", "db_dados_cruzados.json")
     print("JSONs desarquivados com sucesso")
     db = TinyDB('db.json')
     global leilao
@@ -122,12 +157,13 @@ def desarquivar_jsons(filename):
     leilao = db.table('leilao')
     diario_oficial = db.table('diario_oficial')
     
+    
 
  
   
 if __name__ == "__main__":
     tk = Tk()
-    tk.geometry("400x500")
+    tk.geometry("400x600")
     tk.resizable(False, False)
     frame = Frame(tk, width=300, height=300, padx=20, pady=20)
     frame.pack()
@@ -143,6 +179,8 @@ if __name__ == "__main__":
     button_arquivar.pack(pady=10, padx=10)
     button_desarquivar = Button(frame, text="Desarquivar JSONs", width=250, pady=15, command=lambda:show_list_dialog())
     button_desarquivar.pack(pady=10, padx=10)
+    button_baixar_range = Button(frame, text="Baixar Diarios em Lote", width=250, pady=15, command=lambda:show_date_range_dialog())
+    button_baixar_range.pack(pady=10, padx=10)
 
 
  

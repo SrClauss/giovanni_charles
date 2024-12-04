@@ -85,20 +85,17 @@ def extract_data_relacao_veiculos_arrematados_muriae(pdf_file):
             result['data_nf'] = None
             result['data_liberacao'] = None
         
-
-        result['diarias'] = valores[0]
-        result['reboque'] = valores[1]
-        result['multas'] = valores[2]
-        result['tx_licenciamento'] = valores[3]
-        result['ipva'] = valores[4]
-        result['debitos'] = valores[5]
-        result['arremate'] = valores[6]
-        result['debito_patio'] = valores[7]
-        result['saldo'] = f"-{valores[8]}"
-        results.append(result)
+        result['diarias'] = float(valores[0].replace("R$","").replace(".","").replace(",","."))
+        result['reboque'] = float(valores[1].replace("R$","").replace(".","").replace(",","."))
+        result['multas'] = float(valores[2].replace("R$","").replace(".","").replace(",","."))
+        result['tx_licenciamento'] = float(valores[3].replace("R$","").replace(".","").replace(",","."))
+        result['ipva'] = float(valores[4].replace("R$","").replace(".","").replace(",","."))
+        result['debitos'] = float(valores[5].replace("R$","").replace(".","").replace(",","."))
+        result['arremate'] = float(valores[6].replace("R$","").replace(".","").replace(",","."))
+        result['debito_patio'] = float(valores[7].replace("R$","").replace(".","").replace(",","."))
+        result['saldo'] = float(valores[8].replace("R$","").replace(".","").replace(",","."))
+        
         tq.update(1)
-
-
     tq.close()
 
 
@@ -194,16 +191,17 @@ def extract_data_relacao_veiculos_arrematados_cajurense(pdf_file, initial_page=0
             result['data_liberacao'] = dates[1]
             result['data_nf'] = dates[2]
         
-
-        result['diarias'] = valores[0]
-        result['multas'] = valores[1]
-        result['reboque'] = valores[4]
-        result['debito'] = valores[5]
-        result['debito_patio'] = valores[6]
-        result['tx_licenciamento'] = valores[7]
-        result['ipva'] = valores[8]
-        result['arremate'] = valores[9]
-        result['total'] = valores[10]
+        result['diarias'] = float(valores[0].replace("R$","").replace(".","").replace(",","."))
+        result['multas'] = float(valores[1].replace("R$","").replace(".","").replace(",","."))
+        result['reboque'] = float(valores[4].replace("R$","").replace(".","").replace(",","."))       
+        result['debitos'] = float(valores[5].replace("R$","").replace(".","").replace(",","."))
+        result['debito_patio'] = float(valores[6].replace("R$","").replace(".","").replace(",","."))
+        result['tx_licenciamento'] = float(valores[7].replace("R$","").replace(".","").replace(",","."))
+        result['ipva'] = float(valores[8].replace("R$","").replace(".","").replace(",","."))
+        result['arremate'] = float(valores[9].replace("R$","").replace(".","").replace(",","."))
+        result['saldo'] = float(valores[10].replace("R$","").replace(".","").replace(",","."))
+        
+        
         
         results.append(result)
 
@@ -236,8 +234,8 @@ def extract_data_new_model(pdf_file):
         result['multas'] = float(line2[5].replace("Total Multas: ","").replace("R$","").replace(".","").replace(",","."))
         result['tx_licenciamento'] = float(line3[0].replace("Tx. Lic.: ","").replace("R$","").replace(".","").replace(",","."))
         result['ipva'] = float(line3[1].replace("IPVA: ","").replace("R$","").replace(".","").replace(",","."))
-        result['debito'] = float(line3[2].replace("Débito: ","").replace("R$","").replace(".","").replace(",","."))
-        result['total'] = float(line3[5].replace("Saldo: ","").replace("R$","").replace(".","").replace(",","."))
+        result['debitos'] = float(line3[2].replace("Débito: ","").replace("R$","").replace(".","").replace(",","."))
+        result['saldo'] = float(line3[5].replace("Saldo: ","").replace("R$","").replace(".","").replace(",","."))
         return result
 
     def extract_page(page):
